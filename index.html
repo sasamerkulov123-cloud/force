@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090b0f">
+<title>Forge — ИИ-напарник программиста</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#090b0f;--s1:#10141b;--s2:#171c25;--ln:#232a36;--tx:#e8ebf0;--mu:#8b95a5;--ac:#ffb347;--ac2:#ff7a45;--er:#ff7b7b;--ok:#7ee0a0;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--tx);font:16px/1.6 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+.glow{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 40% at 50% -8%,#ffb34730,transparent 70%),radial-gradient(40% 30% at 105% 25%,#4a6cf722,transparent 70%);animation:br 9s ease-in-out infinite alternate}
+.glow::after{content:"";position:absolute;inset:0;background:radial-gradient(#ffffff10 1px,transparent 1px) 0 0/24px 24px;-webkit-mask-image:linear-gradient(#000,transparent 65%);mask-image:linear-gradient(#000,transparent 65%)}
+@keyframes br{to{opacity:.6}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+header{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#090b0fcc;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #ffffff0d}
+.lg{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem;letter-spacing:-.01em}
+.lg i{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#1a0e04;font:700 14px var(--mono);box-shadow:0 0 24px #ffb34766}
+.hr{display:flex;gap:8px}
+.ghost{background:#ffffff08;border:1px solid var(--ln);border-radius:10px;padding:6px 13px;color:var(--mu)}
+.ghost:hover{color:var(--tx);border-color:#3a4456}
+.primary{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#1a0e04;border:0;border-radius:11px;padding:10px 22px;font-weight:650}
+.primary:hover{filter:brightness(1.08)}
+.primary:disabled{opacity:.55;cursor:wait}
+.sm{padding:6px 14px;font-size:.875rem}
+main{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+h1{margin:0;font-size:clamp(1.7rem,5vw,2.5rem);line-height:1.15;letter-spacing:-.03em;font-weight:700}
+.sub{margin:10px 0 26px;color:var(--mu);max-width:56ch}
+.modes{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.modes::-webkit-scrollbar{display:none}
+.m{flex:none;background:var(--s1);border:1px solid var(--ln);border-radius:999px;padding:6px 15px;color:var(--mu);transition:.15s}
+.m:hover{color:var(--tx)}
+.m.on{background:var(--ac);border-color:var(--ac);color:#1a0e04;font-weight:600}
+.box{background:var(--s1);border:1px solid var(--ln);border-radius:18px;transition:.2s}
+.box:focus-within{border-color:var(--ac);box-shadow:0 0 0 4px #ffb34720,0 18px 60px #ffb34718}
+#task{display:block;width:100%;min-height:200px;max-height:60vh;resize:vertical;padding:18px 20px;background:none;border:0;outline:0;font-family:var(--mono);font-size:.92rem;line-height:1.6}
+.tool{display:flex;align-items:center;gap:12px;padding:10px 12px 12px 18px;border-top:1px solid var(--ln)}
+.tool select{background:var(--s2);border:1px solid var(--ln);border-radius:9px;padding:6px 10px}
+.hint{margin-left:auto;color:var(--mu);font-size:.8rem}
+#err{margin-top:12px;color:var(--er);min-height:1px}
+.ex{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:18px}
+.ex button{text-align:left;background:var(--s1);border:1px solid var(--ln);border-radius:14px;padding:12px 14px;transition:.15s}
+.ex button:hover{border-color:var(--ac);transform:translateY(-2px)}
+.ex b{display:block;font-weight:600}
+.ex small,#hl small{color:var(--mu)}
+.card{margin-top:28px}
+.q{font:.82rem/1.5 var(--mono);color:var(--mu);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;border-left:2px solid var(--ac);padding-left:12px;margin-bottom:14px}
+.ans p{margin:.6em 0}.ans ul{padding-left:1.3em;margin:.6em 0}.ans h4{margin:1.2em 0 .3em;font-size:1.02rem}
+.ans code,.ans li code{font:.86em var(--mono);background:#ffffff12;padding:1px 6px;border-radius:6px}
+.bad{color:var(--er)}
+.dots::after{content:"●●●";color:var(--ac);letter-spacing:5px;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.2}}
+.cb{background:#0b0e14;border:1px solid var(--ln);border-radius:14px;overflow:hidden;margin:14px 0}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 6px 5px 14px;background:var(--s1);border-bottom:1px solid var(--ln);font:.78rem var(--mono);color:var(--mu)}
+.ch div{display:flex;gap:4px}
+.ch button{background:none;border:0;border-radius:7px;padding:5px 10px;color:var(--mu)}
+.ch button:hover{background:#ffffff10;color:var(--tx)}
+pre{margin:0;padding:16px;overflow:auto;font:.84rem/1.65 var(--mono);tab-size:4;color:#c8d0e0}
+pre i{font-style:normal}
+i.k{color:#bb9af7}i.t{color:#7dcfff}i.s{color:#9ece6a}i.c{color:#5c6785;font-style:italic}i.n{color:#ff9e64}i.p{color:#73daca}i.f{color:#7aa2f7}
+.run{padding:12px;border-top:1px solid var(--ln);background:var(--s1);display:grid;gap:10px;justify-items:start}
+.run textarea{width:100%;background:#0b0e14;border:1px solid var(--ln);border-radius:10px;padding:10px;font:.84rem var(--mono);resize:vertical}
+.run .out{width:100%;border-radius:10px;background:#0b0e14;border:1px solid var(--ln);min-height:44px;white-space:pre-wrap}
+.out.bad{color:var(--er);border-color:#ff7b7b55}
+#fu{margin-top:30px;padding-top:20px;border-top:1px solid var(--ln)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chips button{background:var(--s1);border:1px solid var(--ln);border-radius:999px;padding:5px 13px;font-size:.875rem;color:var(--mu)}
+.chips button:hover{color:var(--tx);border-color:var(--ac)}
+#ff{display:flex;gap:10px}
+#fi{flex:1;min-width:0;background:var(--s1);border:1px solid var(--ln);border-radius:12px;padding:10px 14px}
+#fi:focus{outline:0;border-color:var(--ac)}
+#dr{position:fixed;top:0;right:0;bottom:0;width:min(340px,88vw);background:var(--s1);border-left:1px solid var(--ln);transform:translateX(102%);transition:transform .25s;z-index:30;padding:16px;overflow:auto}
+#dr.open{transform:none}
+.dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dh div{display:flex;gap:6px}
+#hl button{display:block;width:100%;text-align:left;background:var(--s2);border:1px solid var(--ln);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+#hl button:hover{border-color:var(--ac)}
+#hl b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mu{color:var(--mu)}
+dialog{border:1px solid var(--ln);border-radius:18px;background:var(--s1);color:var(--tx);padding:24px;width:min(460px,calc(100% - 32px))}
+dialog::backdrop{background:#000a}
+dialog h2{margin:0 0 12px;font-size:1.15rem}
+label{display:block;margin:12px 0 4px;font-size:.85rem;color:var(--mu)}
+dialog select,dialog input{width:100%;padding:9px 12px;border:1px solid var(--ln);border-radius:10px;background:var(--bg)}
+dialog small{display:block;margin-top:14px;color:var(--mu);font-size:.8rem;line-height:1.5}
+dialog a{color:var(--ac)}
+.acts{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+@media (max-width:520px){main{padding-top:26px}.hint{display:none}.tool .primary{margin-left:auto}}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<header>
+  <div class="lg"><i>{}</i>Forge</div>
+  <div class="hr"><button class="ghost" id="bh" type="button">История</button><button class="ghost" id="bs" type="button">Настройки</button></div>
+</header>
+<main>
+  <h1>Ваш ИИ-напарник для кода</h1>
+  <p class="sub">Решает задачи, ищет баги, ускоряет код, пишет тесты и запускает программы прямо на странице.</p>
+  <div class="modes" id="modes"></div>
+  <div class="box">
+    <textarea id="task" aria-label="Ввод" spellcheck="false"></textarea>
+    <div class="tool"><select id="lang" aria-label="Язык"></select><span class="hint">Ctrl + Enter</span><button class="primary" id="go" type="button"></button></div>
+  </div>
+  <div id="err" role="alert"></div>
+  <div class="ex" id="ex"></div>
+  <section id="thread"></section>
+  <div id="fu" hidden><div class="chips" id="chips"></div><form id="ff"><input id="fi" placeholder="Задать уточняющий вопрос…" autocomplete="off"><button class="primary sm">Отправить</button></form></div>
+</main>
+<aside id="dr"><div class="dh"><b>История</b><div><button class="ghost sm" id="hc" type="button">Очистить</button><button class="ghost sm" id="hx" type="button" aria-label="Закрыть">✕</button></div></div><div id="hl"></div></aside>
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h2>Настройки нейросети</h2>
+    <label for="prov">Сервис</label>
+    <select id="prov">
+      <option value="groq">Groq (бесплатный тариф)</option>
+      <option value="gemini">Google Gemini (бесплатный тариф)</option>
+      <option value="openrouter">OpenRouter (есть бесплатные модели)</option>
+      <option value="openai">OpenAI</option>
+      <option value="custom">Другой (OpenAI-совместимый)</option>
+    </select>
+    <label for="url">Адрес API</label><input id="url" type="url" autocomplete="off">
+    <label for="model">Модель</label><input id="model" type="text" autocomplete="off">
+    <label for="key">API-ключ</label><input id="key" type="password" autocomplete="off" placeholder="Вставьте ключ">
+    <small>Ключ хранится только в вашем браузере и уходит напрямую выбранному сервису. Сервис определяется по ключу автоматически. Бесплатные ключи: <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a>, <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>, <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">OpenRouter</a>.</small>
+    <div class="acts"><button class="ghost" type="button" id="cancel">Отмена</button><button class="primary" type="submit">Сохранить</button></div>
+  </form>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const LANGS={cpp:['C++','cpp','gcc-head','main.cpp'],python:['Python','python','cpython-head','main.py'],java:['Java','java','openjdk-head','Main.java'],c:['C','c','gcc-head-c','main.c'],js:['JavaScript','js','nodejs-head','main.js'],cs:['C#','cs','mono-head','main.cs'],go:['Go','go','go-head','main.go'],rust:['Rust','rust','rust-head','main.rs']};
+const MODES=[
+ {id:'solve',n:'Решить задачу',b:'Решить',ph:'Вставьте условие задачи…',p:'Реши задачу: дай полное рабочее решение, затем коротко объясни идею и сложность.'},
+ {id:'explain',n:'Объяснить код',b:'Объяснить',ph:'Вставьте код, который нужно разобрать…',p:'Объясни, как работает код, по шагам. Укажи сложность и возможные проблемы. Код переписывать не нужно.'},
+ {id:'bug',n:'Найти ошибку',b:'Найти ошибку',ph:'Вставьте код и, если есть, текст ошибки или описание проблемы…',p:'Найди ошибки в коде, объясни причину каждой и дай исправленную версию целиком.'},
+ {id:'opt',n:'Оптимизировать',b:'Оптимизировать',ph:'Вставьте код, который нужно ускорить или упростить…',p:'Оптимизируй код по скорости и читаемости. Дай улучшенную версию и объясни, что изменилось и как это влияет на сложность.'},
+ {id:'test',n:'Написать тесты',b:'Создать тесты',ph:'Вставьте код или условие задачи…',p:'Придумай набор тестов: обычные, граничные и тяжёлые случаи, с ожидаемым результатом.'}
+];
+const EX=[
+ ['Сумма двух чисел','Напиши программу, которая складывает два числа a и b','solve'],
+ ['Решето Эратосфена','Выведи все простые числа от 1 до N (N ≤ 10^7) максимально быстро','solve'],
+ ['Найти баг','#include <iostream>\nint main() {\n    int a[5];\n    for (int i = 0; i <= 5; i++) a[i] = i * i;\n    std::cout << a[5] << std::endl;\n}','bug'],
+ ['Ускорить код','#include <iostream>\nusing namespace std;\nint main() {\n    int n; cin >> n;\n    long long s = 0;\n    for (int i = 1; i <= n; i++)\n        for (int j = 1; j <= i; j++) s += j;\n    cout << s;\n}','opt']
+];
+const CHIPS=['Оптимизируй по скорости и памяти','Объясни подробнее, шаг за шагом','Добавь тесты и граничные случаи','Перепиши на Python'];
+const PRESETS={
+ groq:{url:'https://api.groq.com/openai/v1/chat/completions',model:'llama-3.3-70b-versatile'},
+ gemini:{url:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',model:'gemini-2.5-flash'},
+ openrouter:{url:'https://openrouter.ai/api/v1/chat/completions',model:'meta-llama/llama-3.3-70b-instruct:free'},
+ openai:{url:'https://api.openai.com/v1/chat/completions',model:'gpt-4o-mini'},
+ custom:{url:'',model:''}
+};
+const PN={openrouter:'OpenRouter',gemini:'Gemini',groq:'Groq',openai:'OpenAI',custom:'выбранный сервис'};
+let cfg={provider:'groq',...PRESETS.groq,key:''},mode='solve',sid=0,messages=[],hist=[];
+try{const s=JSON.parse(localStorage.getItem('cpp-solver')||'null');if(s)cfg={...cfg,...s}}catch(e){}
+try{hist=JSON.parse(localStorage.getItem('forge-h')||'[]')}catch(e){}
+function detect(k){return /^gsk_/.test(k)?'groq':/^sk-or-/.test(k)?'openrouter':/^AIza/.test(k)?'gemini':null}
+function fixProvider(){const d=detect(cfg.key);if(d&&d!==cfg.provider)cfg={...cfg,provider:d,...PRESETS[d]}}
+function save(){try{localStorage.setItem('cpp-solver',JSON.stringify(cfg))}catch(e){}}
+fixProvider();
+
+/* подсветка */
+const KW=new Set('alignas auto break case catch class const constexpr continue default delete do else enum explicit extern false for friend goto if inline namespace new noexcept nullptr operator private protected public return sizeof static struct switch template this throw true try typedef typename union using virtual while def elif except finally from import in is lambda None not or and pass raise with yield async await global del True False abstract extends final implements interface package super synchronized throws var let function export fn mut impl pub mod use match loop move ref trait where crate func go chan defer select type range readonly override string_view'.split(' '));
+const TY=new Set('int long short char bool float double void unsigned signed size_t string vector map set unordered_map unordered_set pair array queue stack deque cin cout cerr endl std byte i8 i16 i32 i64 u8 u16 u32 u64 usize f32 f64 str String Vec Option Result Integer Boolean Double List Map Math Object int8 int16 int32 int64 uint rune error bytes dict list tuple self'.split(' '));
+const RC=/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`[^`]*`)|(^[ \t]*#[^\n]*)|(\b\d[\w.]*)|([A-Za-z_]\w*)/gm;
+const RP=/(#[^\n]*)|("""[\s\S]*?"""|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\u0000)|(\b\d[\w.]*)|([A-Za-z_]\w*)/gm;
+function hl(code,k){
+  if(!k)return esc(code);
+  const re=new RegExp((k==='python'?RP:RC).source,'gm');
+  let o='',l=0,m;
+  while((m=re.exec(code))){
+    o+=esc(code.slice(l,m.index));const t=esc(m[0]);
+    o+=m[1]?'<i class="c">'+t+'</i>':m[2]?'<i class="s">'+t+'</i>':m[3]?'<i class="p">'+t+'</i>':m[4]?'<i class="n">'+t+'</i>':KW.has(m[0])?'<i class="k">'+t+'</i>':TY.has(m[0])?'<i class="t">'+t+'</i>':/^\s*\(/.test(code.slice(re.lastIndex,re.lastIndex+3))?'<i class="f">'+t+'</i>':t;
+    l=re.lastIndex;
+  }
+  return o+esc(code.slice(l));
+}
+
+/* разметка ответа */
+const inl=s=>esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+function prose(t){
+  return t.split(/\n{2,}/).map(b=>{b=b.trim();if(!b)return '';
+    if(/^#{1,4}\s/.test(b))return '<h4>'+inl(b.replace(/^#+\s*/,''))+'</h4>';
+    if(/^([-*]|\d+[.)])\s/.test(b))return '<ul>'+b.split(/\n(?=(?:[-*]|\d+[.)])\s)/).map(x=>'<li>'+inl(x.replace(/^([-*]|\d+[.)])\s+/,''))+'</li>').join('')+'</ul>';
+    return '<p>'+inl(b).replace(/\n/g,'<br>')+'</p>';
+  }).join('');
+}
+function lk(tag){const a={'c++':'cpp',py:'python',javascript:'js',csharp:'cs',rs:'rust',golang:'go'};tag=a[tag]||tag;return LANGS[tag]?tag:null}
+function blk(p){
+  const i=p.indexOf('\n'),tag=(i<0?p:p.slice(0,i)).trim().toLowerCase(),code=i<0?'':p.slice(i+1).replace(/\n$/,''),k=lk(tag),L=LANGS[k];
+  return '<div class="cb" data-k="'+(k||'')+'"><div class="ch"><span>'+(L?L[3]:'ввод / вывод')+'</span><div><button data-a="copy">Копировать</button>'+(L?'<button data-a="dl">Скачать</button><button data-a="run">Запустить</button>':'')+'</div></div><pre><code>'+hl(code,k)+'</code></pre>'+(L?'<div class="run" hidden><textarea rows="2" placeholder="Входные данные (stdin), если программа их читает"></textarea><button class="primary sm" data-a="exec">Выполнить</button><pre class="out"></pre><div class="fx"></div></div>':'')+'</div>';
+}
+const md=t=>t.split('```').map((p,i)=>i%2?blk(p):prose(p)).join('');
+
+/* интерфейс */
+function renderModes(){$('#modes').innerHTML=MODES.map(m=>'<button class="m" data-id="'+m.id+'" type="button">'+m.n+'</button>').join('')}
+function setMode(id){mode=id;const m=MODES.find(x=>x.id===id);$('#task').placeholder=m.ph;$('#go').textContent=m.b;document.querySelectorAll('.m').forEach(b=>b.classList.toggle('on',b.dataset.id===id))}
+function busy(b){$('#go').disabled=b;$('#fi').disabled=b;$('#go').textContent=b?'Думаю…':MODES.find(m=>m.id===mode).b}
+const fail=m=>{$('#err').textContent=m};
+function card(q,smooth){
+  const a=document.createElement('article');a.className='card';
+  a.innerHTML='<div class="q">'+esc(q)+'</div><div class="ans"><span class="dots"></span></div>';
+  $('#thread').appendChild(a);a.scrollIntoView({behavior:smooth===false?'auto':'smooth',block:'start'});return a;
+}
+function drawHist(){
+  $('#hl').innerHTML=hist.length?hist.map(h=>'<button data-id="'+h.id+'"><b>'+esc(h.t)+'</b><small>'+MODES.find(m=>m.id===h.mode).n+' · '+LANGS[h.lang][0]+'</small></button>').join(''):'<p class="mu">Здесь появятся ваши запросы.</p>';
+}
+function saveHist(){
+  const e={id:sid,t:messages[0].content.split('\n')[0].slice(0,70),mode,lang:$('#lang').value,msgs:messages};
+  hist=[e,...hist.filter(h=>h.id!==sid)].slice(0,25);
+  try{localStorage.setItem('forge-h',JSON.stringify(hist))}catch(x){}
+  drawHist();
+}
+function restore(id){
+  const h=hist.find(x=>x.id==id);if(!h)return;
+  sid=h.id;messages=h.msgs.slice();setMode(h.mode);$('#lang').value=h.lang;
+  $('#thread').innerHTML='';$('#ex').hidden=true;
+  for(let i=0;i<messages.length;i+=2){const c=card(messages[i].content,false);if(messages[i+1])c.querySelector('.ans').innerHTML=md(messages[i+1].content)}
+  $('#fu').hidden=false;$('#dr').classList.remove('open');
+}
+
+/* нейросеть */
+function sys(){
+  const m=MODES.find(x=>x.id===mode),l=$('#lang').value;
+  return 'Ты — старший инженер и наставник по программированию. Основной язык: '+(l==='cpp'?'C++17':LANGS[l][0])+'. '+m.p+' Правила: весь код — в блоках ```'+LANGS[l][1]+' (решение одним полным рабочим блоком, ввод из stdin, вывод в stdout). Пояснения пиши по-русски, коротко и по делу, без таблиц Markdown. Примеры ввода/вывода и тесты давай отдельными блоками ``` без указания языка.';
+}
+async function pickModel(){
+  const r=await fetch(cfg.url.replace(/\/chat\/completions\/?$/,'/models'),{headers:{Authorization:'Bearer '+cfg.key}});
+  if(!r.ok)return null;
+  const j=await r.json();
+  const ids=(j.data||[]).map(m=>m.id).filter(id=>id&&!/whisper|guard|tts|embed|moderation|playai|orpheus|image/i.test(id)&&(cfg.provider!=='openrouter'||/:free$/.test(id)));
+  return ids.find(id=>/gpt-oss-120b|70b|versatile/i.test(id))||ids[0]||null;
+}
+function explain(e){
+  const s=e.status;
+  if(s===401||s===403)return 'Сервис не принял ключ (код '+s+'). Проверьте ключ в настройках. Если включён VPN, попробуйте сменить страну.';
+  if(s===429)return 'Превышен лимит бесплатных запросов. Подождите минуту и повторите.';
+  if(e instanceof TypeError)return 'Нет связи с «'+PN[cfg.provider]+'». Проверьте интернет и VPN. Если файл открыт внутри приложения, откройте его в браузере.';
+  return (s?'Ошибка '+s+': ':'')+(e.message||e);
+}
+async function chat(ans,retry){
+  const r=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+cfg.key},body:JSON.stringify({model:cfg.model,temperature:.2,stream:true,messages:[{role:'system',content:sys()},...messages]})});
+  if(!r.ok){
+    const j=await r.json().catch(()=>({}));
+    if(!retry&&(r.status===400||r.status===404)&&/model/i.test(JSON.stringify(j))){const m=await pickModel();if(m&&m!==cfg.model){cfg.model=m;save();return chat(ans,1)}}
+    const e=j.error&&(j.error.message||j.error),err=new Error(typeof e==='string'?e:'сервис вернул ошибку');err.status=r.status;throw err;
+  }
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',acc='';
+  for(;;){
+    const {done,value}=await rd.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    const ls=buf.split('\n');buf=ls.pop();
+    for(const l of ls){
+      if(l.indexOf('data:')!==0)continue;
+      const d=l.slice(5).trim();if(d==='[DONE]')continue;
+      try{const c=JSON.parse(d).choices[0].delta.content;if(c){acc+=c;ans.innerHTML=md(acc)}}catch(e){}
+    }
+  }
+  if(!acc)throw new Error('нейросеть вернула пустой ответ, попробуйте ещё раз');
+  return acc;
+}
+async function send(text){
+  if(!cfg.key){fail('Добавьте API-ключ в настройках.');openSettings();return}
+  fixProvider();save();fail('');
+  messages.push({role:'user',content:text});
+  const c=card(text),ans=c.querySelector('.ans');busy(true);
+  try{const acc=await chat(ans);messages.push({role:'assistant',content:acc});ans.innerHTML=md(acc);saveHist();$('#fu').hidden=false}
+  catch(e){messages.pop();ans.innerHTML='<p class="bad">'+esc(explain(e))+'</p>'}
+  finally{busy(false)}
+}
+function start(){
+  const t=$('#task').value.trim();if(!t){$('#task').focus();return}
+  sid=Date.now();messages=[];$('#thread').innerHTML='';$('#fu').hidden=true;$('#ex').hidden=true;send(t);
+}
+
+/* запуск кода (онлайн-компилятор Wandbox) */
+async function exec(cb,b){
+  const k=cb.dataset.k,out=cb.querySelector('.out'),fx=cb.querySelector('.fx');
+  fx.innerHTML='';out.className='out';out.textContent='Компиляция и запуск…';b.disabled=true;
+  try{
+    const body={code:cb.querySelector('code').textContent,compiler:LANGS[k][2],stdin:cb.querySelector('textarea').value};
+    if(k==='cpp')body['compiler-option-raw']='-O2\n-std=c++17';
+    const r=await fetch('https://wandbox.org/api/compile.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json(),er=(j.compiler_error||'')+(j.program_error||''),bad=String(j.status)!=='0'||j.compiler_error;
+    out.textContent=((j.program_output||'')+er)||'(программа ничего не вывела)';
+    if(bad){out.className='out bad';cb.dataset.err=er.slice(0,1500)||'программа завершилась с ошибкой';fx.innerHTML='<button class="ghost sm" data-a="fix">Исправить с ИИ</button>'}
+  }catch(e){out.className='out bad';out.textContent='Не удалось запустить код онлайн ('+(e.message||e)+'). Проверьте интернет.'}
+  finally{b.disabled=false}
+}
+async function copy(text,b){
+  try{await navigator.clipboard.writeText(text)}
+  catch(e){const a=document.createElement('textarea');a.value=text;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}
+  const o=b.textContent;b.textContent='Скопировано ✓';setTimeout(()=>b.textContent=o,1500);
+}
+
+/* настройки */
+function openSettings(){$('#prov').value=cfg.provider;$('#url').value=cfg.url;$('#model').value=cfg.model;$('#key').value=cfg.key;$('#dlg').showModal()}
+$('#prov').onchange=e=>{const p=PRESETS[e.target.value];$('#url').value=p.url;$('#model').value=p.model};
+$('#key').addEventListener('input',e=>{const p=detect(e.target.value.trim());if(p&&p!==$('#prov').value){$('#prov').value=p;$('#url').value=PRESETS[p].url;$('#model').value=PRESETS[p].model}});
+$('#form').onsubmit=()=>{cfg={provider:$('#prov').value,url:$('#url').value.trim(),model:$('#model').value.trim(),key:$('#key').value.trim()};fixProvider();save();fail('')};
+$('#cancel').onclick=()=>$('#dlg').close();
+$('#bs').onclick=openSettings;
+
+/* события */
+$('#modes').onclick=e=>{const b=e.target.closest('.m');if(b)setMode(b.dataset.id)};
+$('#go').onclick=start;
+$('#task').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')start()});
+$('#ex').onclick=e=>{const b=e.target.closest('button');if(!b)return;const x=EX[b.dataset.i];setMode(x[2]);$('#task').value=x[1];$('#task').focus()};
+$('#chips').onclick=e=>{const b=e.target.closest('button');if(b&&!$('#go').disabled)send(b.textContent)};
+$('#ff').onsubmit=e=>{e.preventDefault();const v=$('#fi').value.trim();if(v&&!$('#go').disabled){$('#fi').value='';send(v)}};
+$('#bh').onclick=()=>$('#dr').classList.toggle('open');
+$('#hx').onclick=()=>$('#dr').classList.remove('open');
+$('#hc').onclick=()=>{hist=[];try{localStorage.removeItem('forge-h')}catch(e){}drawHist()};
+$('#hl').onclick=e=>{const b=e.target.closest('button');if(b)restore(b.dataset.id)};
+$('#thread').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]');if(!b)return;
+  const cb=b.closest('.cb'),a=b.dataset.a,code=cb.querySelector('code').textContent,k=cb.dataset.k;
+  if(a==='copy')copy(code,b);
+  else if(a==='dl'){const u=URL.createObjectURL(new Blob([code],{type:'text/plain'})),x=document.createElement('a');x.href=u;x.download=LANGS[k][3];x.click();URL.revokeObjectURL(u)}
+  else if(a==='run'){const r=cb.querySelector('.run');r.hidden=!r.hidden}
+  else if(a==='exec')exec(cb,b);
+  else if(a==='fix'&&!$('#go').disabled)send('Этот код не работает:\n```'+LANGS[k][1]+'\n'+code+'\n```\nОшибка:\n'+cb.dataset.err+'\n\nИсправь код и коротко объясни, что было не так.');
+});
+
+/* старт */
+$('#lang').innerHTML=Object.keys(LANGS).map(k=>'<option value="'+k+'">'+LANGS[k][0]+'</option>').join('');
+$('#chips').innerHTML=CHIPS.map(c=>'<button type="button">'+c+'</button>').join('');
+$('#ex').innerHTML=EX.map((x,i)=>'<button type="button" data-i="'+i+'"><b>'+x[0]+'</b><small>'+MODES.find(m=>m.id===x[2]).n+'</small></button>').join('');
+renderModes();setMode('solve');drawHist();
+</script>
+</body>
+</html>
